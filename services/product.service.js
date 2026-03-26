@@ -84,7 +84,7 @@ export const updateProduct = async (id, nombre, precio, descripcion, star, marca
 
     const uploadedNewImages = [];
     if (files && files.length > 0) {
-        for (const file of req.files) {
+        for (const file of files) {
             const uploaded = await cloudinary.uploader.upload(file.path, {
                 folder: "products", 
                 resource_type: "image",
