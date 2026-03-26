@@ -38,7 +38,6 @@ export const remBackground = async (inputPath) => {
             inputImage: inputPath,
         });
 
-        console.log("✅ Fondo eliminado:", outputImagePath);
         return { outputPath: outputImagePath, cleanup };
     } catch (err) {
         console.error("❌ Error removiendo fondo:", err);

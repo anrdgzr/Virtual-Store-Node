@@ -33,13 +33,12 @@ app.use("/api/metrics", metricsRoutes);
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
-app.listen(process.env.PORT, () => {
-    console.log(`Servidor corriendo en http://localhost:${process.env.PORT}`);
-    console.log("Cloudinary vars:", process.env.CLOUDINARY_CLOUD_NAME, process.env.CLOUDINARY_API_KEY);
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Servidor corriendo en puerto ${PORT}`);
 });
 
 app.use((err, req, res, next) => {
   console.error("GLOBAL ERROR:", err);
   res.status(500).json({ message: "Internal server error", error: err.message });
 });
-

@@ -18,7 +18,6 @@ export const getUserProfile = async (req, res) => {
 
 export const getUserOrders = async (req, res) => {
     try {
-        console.log("REQ:", req.user)
         if (!req.user || !req.user.id) {
             return res.status(401).json({ message: "No se encontró el ID del usuario en el token." });
         }

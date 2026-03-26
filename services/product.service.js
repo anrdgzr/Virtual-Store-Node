@@ -38,7 +38,7 @@ export const deleteProduct = async (id) => {
         const publicId = extractPublicId(imgUrl);
         if (publicId) {
             await cloudinary.uploader.destroy(publicId);
-            console.log(`Eliminado de Cloudinary (Product Delete): ${publicId}`);
+            // console.log(`Eliminado de Cloudinary (Product Delete): ${publicId}`);
         }
     }
         
@@ -78,7 +78,7 @@ export const updateProduct = async (id, nombre, precio, descripcion, star, marca
         const publicId = extractPublicId(imgUrl);
         if (publicId) {
             await cloudinary.uploader.destroy(publicId);
-            console.log(`Eliminado de Cloudinary: ${publicId}`);
+            // console.log(`Eliminado de Cloudinary: ${publicId}`);
         }
     }
 
