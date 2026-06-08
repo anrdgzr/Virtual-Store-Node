@@ -1,29 +1,21 @@
 import Product from "../models/Product.js";
-import fs from "fs";
-import { v2 as cloudinary } from "cloudinary";
+import { deleteLocalFile } from "../utils/utils.js";
 
-export const extractPublicId = (url) => {
-    try {
-        
-        const parts = url.split('/upload/'); 
-        if (parts.length < 2) return null;
-        
-        const pathWithoutVersion = parts[1].replace(/^v\d+\//, ''); 
-        
-        const publicId = pathWithoutVersion.substring(0, pathWithoutVersion.lastIndexOf('.'));
-        return publicId;
-    } catch (error) {
-        console.error("Error extrayendo public_id:", error);
-        return null;
-    }
-};
 export const createProduct = async (data) => {
     const nuevoProducto = new Product(data);
     return await nuevoProducto.save();
 };
 
-export const getProducts = async () => {
-    return await Product.find();
+export const getProducts = async (categoriaId = null) => {
+    let query = {};
+
+    if (categoriaId) {
+        query.categoria = categoriaId;
+    }
+
+    return await Product.find(query)
+        .populate("marca")
+        .populate("categoria");
 };
 
 export const deleteProduct = async (id) => {
@@ -35,33 +27,28 @@ export const deleteProduct = async (id) => {
     }
 
     for (const imgUrl of producto.imagenes) {
-        const publicId = extractPublicId(imgUrl);
-        if (publicId) {
-            await cloudinary.uploader.destroy(publicId);
-            // console.log(`Eliminado de Cloudinary (Product Delete): ${publicId}`);
-        }
+        deleteLocalFile(imgUrl);
     }
-        
+
     return Product.findByIdAndDelete(id);
 };
 
-export const restarStockSabor = async (productId, sabor, cantidad) => {
+export const restarStockVariante = async (productId, skuVariante, cantidad) => {
     const producto = await Product.findById(productId);
     if (!producto) throw new Error("Producto no encontrado");
 
-    const stockRestante = await producto.restarStockSabor(sabor, cantidad);
+    const stockRestante = await producto.restarStockVariante(skuVariante, cantidad);
     return { producto, stockRestante };
 };
 
-export const updateProduct = async (id, nombre, precio, descripcion, star, marca, sabores, existingImages, files) => {
-    const parsedSabores = typeof sabores === "string" ? JSON.parse(sabores) : sabores;
+export const updateProduct = async (id, nombre, precioBase, descripcion, star, marca, variantes, existingImages, files, categoria) => {
+    const parsedVariantes = typeof variantes === "string" ? JSON.parse(variantes) : variantes;
     const parsedExistingImages = typeof existingImages === "string" ? JSON.parse(existingImages) : existingImages;
-    
-    const isStar = star === "true" || star === true; 
+    const isStar = star === "true" || star === true;
 
     if (!id || id === "undefined") {
-        const error = new Error("ID de producto inválido o no proporcionado");
-        error.status = 404;
+        const error = new Error("ID de producto inválido");
+        error.status = 400;
         throw error;
     }
 
@@ -73,42 +60,26 @@ export const updateProduct = async (id, nombre, precio, descripcion, star, marca
     }
 
     const imagesToDelete = product.imagenes.filter(imgUrl => !parsedExistingImages.includes(imgUrl));
-    
     for (const imgUrl of imagesToDelete) {
-        const publicId = extractPublicId(imgUrl);
-        if (publicId) {
-            await cloudinary.uploader.destroy(publicId);
-            // console.log(`Eliminado de Cloudinary: ${publicId}`);
-        }
+        deleteLocalFile(imgUrl);
     }
 
     const uploadedNewImages = [];
-    // if (files && files.length > 0) {
-    //     for (const file of files) {
-    //         const uploaded = await cloudinary.uploader.upload(file.path, {
-    //             folder: "products", 
-    //             resource_type: "image",
-    //         });
-    //         uploadedNewImages.push(uploaded.secure_url);
-            
-    //         fs.unlinkSync(file.path); 
-    //     }
-    // }
-    
     if (files && files.length > 0) {
         for (const file of files) {
-            uploadedNewImages.push(file.path);
+            uploadedNewImages.push(`/uploads/${file.filename}`);
         }
     }
 
     const finalImages = [...parsedExistingImages, ...uploadedNewImages];
 
     product.nombre = nombre;
-    product.precio = Number(precio);
+    product.precioBase = Number(precioBase);
     product.descripcion = descripcion;
     product.marca = marca;
+    product.categoria = categoria;
     product.star = isStar;
-    product.sabores = parsedSabores;
+    product.variantes = parsedVariantes;
     product.imagenes = finalImages;
 
     return await product.save();

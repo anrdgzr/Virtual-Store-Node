@@ -1,18 +1,17 @@
-import { createBrands, getAllBrands } from "../services/brand.service.js";
+import { createBrands, getAllBrands, deleteBrand } from "../services/brand.service.js";
 
 export const uploadBrands = async (req, res) => {
     try {
         const marcasRaw = req.body.marcas;
         let marcas = JSON.parse(marcasRaw);
 
-        if (req.files) {
+        if (req.files && req.files.length > 0) {
             for (const file of req.files) {
-
-                const idx = file.fieldname.match(/\d+/)[0];
-
-                if (!marcas[idx].imagenes) marcas[idx].imagenes = [];
-
-                marcas[idx].imagenes.push(file.path);
+                if (file.filename) {
+                    const idx = file.fieldname.match(/\d+/)[0];
+                    if (!marcas[idx].imagenes) marcas[idx].imagenes = [];
+                    marcas[idx].imagenes.push(`/uploads/${file.filename}`);
+                }
             }
         }
 
@@ -31,5 +30,16 @@ export const fetchBrands = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Error obteniendo marcas", error: err.message });
+    }
+};
+
+export const removeBrand = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const brand = await deleteBrand(id);
+        res.json({ message: "Marca eliminada correctamente", brand });
+    } catch (err) {
+        console.error("ERROR IN CONTROLLER:", err);
+        res.status(500).json({ message: "Error eliminando marca", error: err.message });
     }
 };

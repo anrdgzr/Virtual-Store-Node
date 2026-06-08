@@ -3,19 +3,20 @@ import * as productService from "../services/product.service.js";
 // Crear producto
 export const createProduct = async (req, res) => {
     try {
-        const { nombre, precio, descripcion, star, sabores, marca } = req.body;
-        const saboresParsed = JSON.parse(sabores);
+        const { nombre, precioBase, descripcion, star, variantes, marca, categoria } = req.body;
+        const variantesParsed = JSON.parse(variantes);
 
-        const imagenes = req.files.map((file) => file.path);
+        const imagenes = req.body.processedImages || [];
 
         const nuevoProducto = await productService.createProduct({
             nombre,
-            precio,
+            precioBase,
             descripcion,
             star,
             marca,
-            sabores: saboresParsed,
+            variantes: variantesParsed,
             imagenes,
+            categoria
         });
 
         res.status(201).json(nuevoProducto);
@@ -28,7 +29,9 @@ export const createProduct = async (req, res) => {
 // Listar productos
 export const getProducts = async (req, res) => {
     try {
-        const productos = await productService.getProducts();
+        const { categoria } = req.query;
+
+        const productos = await productService.getProducts(categoria);
         res.json(productos);
     } catch (error) {
         console.error("Error listando productos:", error);
@@ -36,21 +39,25 @@ export const getProducts = async (req, res) => {
     }
 };
 
+// Actualizar producto
 export const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        let { nombre, precio, descripcion, star, marca, sabores, existingImages } = req.body;
+        const { nombre, precioBase, descripcion, star, marca, variantes, existingImages, categoria } = req.body;
+
+        const newImages = req.body.processedImages || [];
 
         const updatedProduct = await productService.updateProduct(
-            id, 
-            nombre, 
-            precio, 
-            descripcion, 
-            star, 
-            marca, 
-            sabores, 
+            id,
+            nombre,
+            precioBase,
+            descripcion,
+            star,
+            marca,
+            variantes,
             existingImages,
-            req.files
+            newImages,
+            categoria
         );
 
         res.status(200).json(updatedProduct);
@@ -64,31 +71,28 @@ export const updateProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        
         await productService.deleteProduct(id);
-
-        res.json({ message: "Producto eliminado" });
+        res.json({ message: "Producto y sus imágenes locales eliminados" });
     } catch (error) {
         console.error("Error eliminando producto:", error);
-        res.status(error.status || 500).json({
-            message: error.message || "Error al eliminar producto"
-        });
+        res.status(error.status || 500).json({ message: error.message || "Error al eliminar producto" });
     }
 };
 
-export const restarStockSabor = async (req, res) => {
+// Actualizar Stock
+export const restarStockVariante = async (req, res) => {
     try {
         const { id } = req.params;
-        const { sabor, cantidad } = req.body;
+        const { sku, cantidad } = req.body;
 
-        const { producto, stockRestante } = await productService.restarStockSabor(
+        const { producto, stockRestante } = await productService.restarStockVariante(
             id,
-            sabor,
+            sku,
             cantidad
         );
 
         res.json({
-            message: `Stock actualizado para ${sabor}`,
+            message: `Stock actualizado para ${sku}`,
             stockRestante,
             producto,
         });

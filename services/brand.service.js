@@ -1,4 +1,5 @@
-import {Brand} from "../models/Brand.js";
+import { Brand } from "../models/Brand.js";
+import { deleteLocalFile } from "../utils/utils.js";
 
 export const createBrands = async (marcas) => {
     const savedBrands = [];
@@ -19,4 +20,17 @@ export const createBrands = async (marcas) => {
 
 export const getAllBrands = async () => {
     return await Brand.find().sort({ createdAt: -1 });
+};
+
+export const deleteBrand = async (id) => {
+    const brand = await Brand.findById(id);
+    if (!brand) throw new Error("Marca no encontrada");
+
+    if (brand.imagenes && brand.imagenes.length > 0) {
+        for (const imgUrl of brand.imagenes) {
+            deleteLocalFile(imgUrl);
+        }
+    }
+
+    return await Brand.findByIdAndDelete(id);
 };

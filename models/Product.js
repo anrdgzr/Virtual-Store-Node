@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
 
-// Subdocumento para los sabores con stock
-const saborSchema = new mongoose.Schema(
+const varianteSchema = new mongoose.Schema(
     {
-        nombre: { type: String, required: true },
-        cantidad: { type: Number, required: true, default: 0 }
+        sku: { type: String, required: true },
+        atributo: { type: String, required: true },
+        cantidad: { type: Number, required: true, default: 0 },
+        // precioExtra: { type: Number, default: 0 }
     },
     { _id: false }
 );
@@ -13,16 +14,18 @@ const productSchema = new mongoose.Schema(
     {
         nombre: { type: String, required: true },
         descripcion: { type: String, required: true },
-        precio: { type: Number, required: true },
-        marca: { type: String, required: true },
-        sabores: [saborSchema],
+        especificaciones: { type: Map, of: String },
+        precioBase: { type: Number, required: true },
+        marca: { type: mongoose.Schema.Types.ObjectId, ref: "Brand", required: true },
+        categoria: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
+        variantes: [varianteSchema],
+        ranking: { type: Number, default: null },
         star: { type: Boolean, default: false },
         imagenes: [{ type: String, required: true }]
     },
     { timestamps: true }
 );
 
-// Transformación al convertir a JSON
 productSchema.set("toJSON", {
     transform: (doc, ret) => {
         ret.id = ret._id.toString();
@@ -31,19 +34,16 @@ productSchema.set("toJSON", {
     }
 });
 
-// Método para restar stock de un sabor
-productSchema.methods.restarStockSabor = async function (nombreSabor, cantidadARestar) {
-    const sabor = this.sabores.find(s => s.nombre === nombreSabor);
-    if (!sabor) throw new Error(`El sabor "${nombreSabor}" no existe`);
+productSchema.methods.restarStockVariante = async function (skuVariante, cantidadARestar) {
+    const variante = this.variantes.find(v => v.sku === skuVariante);
+    if (!variante) throw new Error(`La variante "${skuVariante}" no existe`);
 
-    if (sabor.cantidad < cantidadARestar)
-        throw new Error(`Stock insuficiente para "${nombreSabor}". Disponible: ${sabor.cantidad}`);
+    if (variante.cantidad < cantidadARestar)
+        throw new Error(`Stock insuficiente. Disponible: ${variante.cantidad}`);
 
-    sabor.cantidad -= cantidadARestar;
-    this.cantidad -= cantidadARestar;
+    variante.cantidad -= cantidadARestar;
     await this.save();
-
-    return sabor.cantidad;
+    return variante.cantidad;
 };
 
-export default mongoose.model("Product", productSchema);
+export default mongoose.model("Product", productSchema, "products");

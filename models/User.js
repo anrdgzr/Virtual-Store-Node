@@ -1,31 +1,36 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-    nombre: { 
-        type: String, 
-        required: true 
+    nombre: {
+        type: String,
+        required: true
     },
-    email: { 
-        type: String, 
-        required: true, 
-        unique: true 
+    email: {
+        type: String,
+        required: true,
+        unique: true
     },
-    password: { 
-        type: String, 
+    password: {
+        type: String,
         // required: true 
     },
-    role: { 
-        type: String, 
-        enum: ["admin", "user"], 
-        default: "user" 
+    role: {
+        type: String,
+        enum: ["admin", "user"],
+        default: "user"
     },
-    googleId: { 
-        type: String 
+    googleId: {
+        type: String
     },
-    favorites: [{ 
-        type: mongoose.Schema.Types.ObjectId, 
+    favorites: [{
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Product"
-    }]
+    }],
+    userType: {
+        type: String,
+        enum: ["particular", "contratista", "distribuidor", "mayorista"],
+        default: "particular"
+    },
 }, { timestamps: true }
 );
 

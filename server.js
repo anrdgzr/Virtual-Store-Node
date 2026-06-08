@@ -10,6 +10,7 @@ import orderRoutes from "./routes/order.routes.js";
 import brandRoutes from "./routes/brand.routes.js";
 import userRoutes from "./routes/user.routes.js"
 import metricsRoutes from "./routes/metrics.routes.js"
+import categoryRoutes from "./routes/category.routes.js";
 
 dotenv.config();
 const app = express();
@@ -20,8 +21,8 @@ app.use(express.json());
 
 // Conexión a MongoDB
 mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("MongoDB conectado"))
-    .catch(err => console.error("Error MongoDB:", err));
+  .then(() => console.log("MongoDB conectado"))
+  .catch(err => console.error("Error MongoDB:", err));
 
 // Rutas
 app.use("/api/products", productRoutes);
@@ -30,12 +31,13 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/brands", brandRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/metrics", metricsRoutes);
+app.use("/api/categories", categoryRoutes);
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Servidor corriendo en puerto ${PORT}`);
+  console.log(`Servidor corriendo en puerto ${PORT}`);
 });
 
 app.use((err, req, res, next) => {

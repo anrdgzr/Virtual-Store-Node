@@ -1,21 +1,21 @@
 import multer from "multer";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
-import cloudinary from "./cloudinary.js";
+import fs from "fs";
 
-const storage = new CloudinaryStorage({
-    cloudinary,
-    params: async (req, file) => {
-        const folder = req.body.folder || "products";
+const uploadDir = "uploads/";
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
 
-        return {
-            folder: folder,
-            // allowed_formats: ["jpg", "png", "jpeg", "webp", "svg"],
-            format: "webp",
-            transformation: [{ quality: "auto" }]
-        };
-    },
-});
+const storage = multer.memoryStorage();
 
-const upload = multer({ storage });
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+        cb(null, true);
+    } else {
+        cb(new Error("El archivo no es una imagen validada."), false);
+    }
+};
+
+const upload = multer({ storage, fileFilter });
 
 export default upload;
